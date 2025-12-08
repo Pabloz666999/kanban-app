@@ -5,23 +5,47 @@ export default (sequelize) => {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true
     },
     title: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     position: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: 0
+    },
+    cardCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0
+    },
+    isArchived: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     },
     boardId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "board_id",
-    },
+      references: {
+        model: 'Boards',
+        key: 'id'
+      }
+    }
+  }, {
+    timestamps: true
   })
+
+  List.associate = (models) => {
+    List.belongsTo(models.Board, { foreignKey: 'boardId', as: 'board' })
+    List.hasMany(models.Card, { foreignKey: 'listId', as: 'cards' })
+  }
 
   return List
 }

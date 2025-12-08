@@ -5,33 +5,42 @@ export default (sequelize) => {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true
     },
     title: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: true
     },
-    priority: {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
+    backgroundColor: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: '#0079bf'
     },
-    is_active: {
+    isPrivate: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true,
+      allowNull: false,
+      defaultValue: false
     },
-    userId: {
+    ownerId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "Users",
-        key: "id"
+        model: 'Users',
+        key: 'id'
       }
     }
+  }, {
+    timestamps: true
   })
+
+  Board.associate = (models) => {
+    Board.belongsTo(models.User, { foreignKey: 'ownerId', as: 'owner' })
+    Board.hasMany(models.List, { foreignKey: 'boardId', as: 'lists' })
+  }
 
   return Board
 }

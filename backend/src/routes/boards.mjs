@@ -1,15 +1,22 @@
-import express from "express"
-import { getAllBoards, getBoardById, createBoard, updateBoard, deleteBoard } from "../controllers/boardController.mjs"
-import { authenticateToken } from "../middleware/auth.mjs"
-import { validateRequest } from "../middleware/validation.mjs"
-import { createBoardValidator, updateBoardValidator } from "../middleware/validators.mjs"
+import express from 'express'
+import { auth } from '../middleware/auth.mjs'
+import { validateRequired } from '../middleware/validate.mjs'
+import {
+  getAllBoards,
+  createBoard,
+  getBoardById,
+  updateBoard,
+  deleteBoard
+} from '../controllers/boardController.mjs'
 
 const router = express.Router()
 
-router.get("/", authenticateToken, getAllBoards)
-router.get("/:id", authenticateToken, getBoardById)
-router.post("/", authenticateToken, createBoardValidator, validateRequest, createBoard)
-router.put("/:id", authenticateToken, updateBoardValidator, validateRequest, updateBoard)
-router.delete("/:id", authenticateToken, deleteBoard)
+router.use(auth) // Semua routes board butuh authentication
+
+router.get('/', getAllBoards)
+router.post('/', validateRequired(['title']), createBoard)
+router.get('/:id', getBoardById)
+router.put('/:id', validateRequired(['title']), updateBoard)
+router.delete('/:id', deleteBoard)
 
 export default router

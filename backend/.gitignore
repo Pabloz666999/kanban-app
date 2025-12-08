@@ -1,7 +1,5 @@
 node_modules/
-# screenshots/
-# README.md
-
 .env
 .eslintignore
 eslint.config.mjs
+docs/
