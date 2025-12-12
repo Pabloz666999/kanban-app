@@ -1,12 +1,14 @@
 import express from "express"
 import { register, login } from "../controllers/authController.mjs"
-import { validateRequest } from "../middleware/validation.mjs"
-import { registerValidator, loginValidator } from "../middleware/validators.mjs"
+import {
+  registerValidation,
+  loginValidation
+} from "../validations/userValidation.mjs"
 import { authenticateToken } from "../middleware/auth.mjs"
 
 const router = express.Router()
 
-router.post("/register", registerValidator, validateRequest, register)
-router.post("/login", loginValidator, validateRequest, login)
+router.post("/register", ...registerValidation, register)
+router.post("/login", ...loginValidation, login)
 
 export default router

@@ -39,7 +39,9 @@ export default (sequelize) => {
       }
     }
   }, {
-    timestamps: true
+    timestamps: true,
+    tableName: 'lists',
+    underscored: true
   })
 
   List.associate = (models) => {

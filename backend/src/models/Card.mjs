@@ -46,7 +46,9 @@ export default (sequelize) => {
       }
     }
   }, {
-    timestamps: true
+    timestamps: true,
+    tableName: 'cards',
+    underscored: true
   })
 
   Card.associate = (models) => {

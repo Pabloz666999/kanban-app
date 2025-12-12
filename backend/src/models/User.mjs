@@ -31,7 +31,9 @@ export default (sequelize) => {
       }
     }
   }, {
-    timestamps: true
+    timestamps: true,
+    tableName: 'users',
+    underscored: true
   })
 
   User.beforeCreate(async (user) => {

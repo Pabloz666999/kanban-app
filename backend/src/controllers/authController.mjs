@@ -3,7 +3,7 @@ import { User } from "../models/index.mjs"
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    expiresIn: process.env.JWT_EXPIRES_IN
   })
 }
 
@@ -23,12 +23,12 @@ const register = async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name
       },
-      token,
+      token
     })
   } catch (error) {
-    console.error('Register error:', error)
+    console.error("Register error:", error)
     res.status(500).json({ error: "Internal server error" })
   }
 }
@@ -48,14 +48,14 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        name: user.name
       },
-      token,
+      token
     })
   } catch (error) {
-    console.error('Login error:', error)
+    console.error("Login error:", error)
     res.status(500).json({ error: "Internal server error" })
   }
 }
 
-export { register, login, }
+export { register, login }

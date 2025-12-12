@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 import { User } from "../models/index.mjs"
 
-export const authenticateToken = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization
     const token = authHeader && authHeader.split(" ")[1]
@@ -23,3 +23,5 @@ export const authenticateToken = async (req, res, next) => {
     return res.status(401).json({ error: "Invalid token" })
   }
 }
+
+export { authenticateToken }
