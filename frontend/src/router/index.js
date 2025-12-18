@@ -22,15 +22,20 @@ const router = createRouter({
       component: () => import('@/views/BoardView.vue'),
       meta: { requiresAuth: true }
     },
-    {
-     path: '/pomodoro',
-     name: 'Pomodoro',
-     component: () => import('@/views/PomodoroView.vue'),
-     meta: { requiresAuth: false } 
-    }
-  ]
-})
-
+        {
+         path: '/pomodoro',
+         name: 'Pomodoro',
+         component: () => import('@/views/PomodoroView.vue'),
+         meta: { requiresAuth: false }
+        },
+        {
+          path: '/privacy-policy',
+          name: 'PrivacyPolicy',
+          component: () => import('@/views/PrivacyPolicy.vue'),
+          meta: { requiresAuth: false }
+        }
+      ]
+    })
 router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated()
 

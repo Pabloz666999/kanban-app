@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   card: {
@@ -8,69 +8,63 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['delete', 'toggle-complete'])
-
-const formatDate = (dateString) => {
-  if (!dateString) return ""
-  return new Date(dateString).toLocaleDateString('id-ID')
-}
-
-const isOverdue = (dueDate) => {
-  if (!dueDate) return false
-  return new Date(dueDate) < new Date()
-}
+const tagColorClass = computed(() => {
+  const colors = {
+    blue: 'text-blue-500 bg-blue-500/10',
+    purple: 'text-purple-500 bg-purple-500/10',
+    green: 'text-green-500 bg-green-500/10',
+    red: 'text-red-500 bg-red-500/10',
+    orange: 'text-orange-500 bg-orange-500/10'
+  }
+  return colors[props.card.tagColor] || 'text-gray-500 bg-gray-500/10'
+})
 </script>
 
 <template>
-  <div
-    class="bg-white rounded-lg p-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-    :class="{ 'opacity-75': card.isCompleted }"
-  >
-    <div class="flex items-start justify-between mb-2">
-      <h4 
-        class="font-medium text-gray-900 text-sm leading-tight flex-1 mr-2"
-        :class="{ 'line-through text-gray-500': card.isCompleted }"
-      >
+  <div class="flex flex-col rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.07)] bg-surface-light dark:bg-background-dark border border-transparent dark:border-border-dark cursor-pointer hover:shadow-md transition-shadow" :class="{ 'opacity-70': card.completed }">
+    
+    <!-- Cover Image -->
+    <div v-if="card.coverImage" class="aspect-video w-full rounded-t-lg bg-cover bg-center" :style="{ backgroundImage: `url('${card.coverImage}')` }"></div>
+    
+    <div class="flex w-full flex-col gap-2 p-4">
+      <!-- Tag -->
+      <span v-if="card.tag" class="text-xs font-medium rounded-full px-2 py-0.5 w-fit" :class="tagColorClass">
+        {{ card.tag }}
+      </span>
+
+      <!-- Title -->
+      <p class="text-base font-bold text-text-light-primary dark:text-text-dark-primary" :class="{ 'line-through': card.completed }">
         {{ card.title }}
-      </h4>
-      <button
-        @click="emit('delete', card.id)"
-        class="text-gray-400 hover:text-red-500 p-1 flex-shrink-0"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
-    
-    <p v-if="card.description" class="text-gray-600 text-xs mb-3 leading-relaxed">
-      {{ card.description }}
-    </p>
-    
-    <div class="flex items-center justify-between">
-      <button
-        @click="emit('toggle-complete', card)"
-        class="flex items-center gap-2 text-xs hover:bg-gray-50 p-1 rounded transition-colors"
-        :class="card.isCompleted ? 'text-green-600' : 'text-gray-500'"
-      >
-        <div
-          class="w-4 h-4 rounded border-2 flex items-center justify-center transition-colors"
-          :class="card.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-gray-400'"
-        >
-          <svg v-if="card.isCompleted" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-          </svg>
+      </p>
+
+      <!-- Description -->
+      <p v-if="card.description" class="text-sm text-text-light-secondary dark:text-text-dark-secondary line-clamp-2">
+        {{ card.description }}
+      </p>
+
+      <!-- Footer -->
+      <div class="mt-2 flex items-center justify-between">
+        <!-- Date / Status -->
+        <div class="flex items-center gap-2 text-sm" :class="[
+          card.isUrgent ? 'text-red-500' : 
+          card.completed ? 'text-green-600 dark:text-green-500' : 
+          'text-text-light-secondary dark:text-text-dark-secondary'
+        ]">
+          <span class="material-symbols-outlined text-lg">
+            {{ card.completed ? 'task_alt' : 'calendar_today' }}
+          </span>
+          <span>{{ card.date }}</span>
         </div>
-        <span>{{ card.isCompleted ? 'Selesai' : 'Tandai selesai' }}</span>
-      </button>
-      
-      <div v-if="card.dueDate" class="text-xs">
-        <span 
-          class="px-2 py-1 rounded font-medium"
-          :class="isOverdue(card.dueDate) ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'"
-        >
-          {{ formatDate(card.dueDate) }}
-        </span>
+
+        <!-- Avatars -->
+        <div class="flex -space-x-2" v-if="card.avatars && card.avatars.length">
+          <div 
+            v-for="(avatar, index) in card.avatars" 
+            :key="index"
+            class="size-6 rounded-full bg-cover ring-2 ring-surface-light dark:ring-surface-dark" 
+            :style="{ backgroundImage: `url('${avatar}')` }"
+          ></div>
+        </div>
       </div>
     </div>
   </div>
