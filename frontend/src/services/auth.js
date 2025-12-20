@@ -6,13 +6,17 @@ export const authService = {
     return response.data
   },
 
-  async login(credentials) {
-    const response = await api.post('/auth/login', credentials)
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
+async login(credentials) {
+
+  const response = await api.post('/auth/login',credentials); 
+  
+  const result = response.data;
+
+  if (result.data && result.data.token) {
+      localStorage.setItem('token', result.data.token);
+      localStorage.setItem('user', JSON.stringify(result.data.user));
     }
-    return response.data
+    return result;
   },
 
   logout() {

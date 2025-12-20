@@ -7,7 +7,7 @@ const api = axios.create({
   }
 })
 
-// Interceptor untuk attach token ke setiap request
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -21,7 +21,6 @@ api.interceptors.request.use(
   }
 )
 
-// Interceptor untuk handle error response
 api.interceptors.response.use(
   (response) => response,
   (error) => {

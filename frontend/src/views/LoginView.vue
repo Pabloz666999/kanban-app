@@ -15,20 +15,24 @@ const loading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
 
+
 const handleSubmit = async () => {
   error.value = ''
   loading.value = true
 
   try {
+  
     const result = await login(formData.value)
 
-    if (result.success) {
-      router.push('/')
+    
+    if (result.success && result.data.data?.token) {
+      router.push('/') 
     } else {
-      error.value = result.error
+      error.value = 'Email atau password salah'
     }
   } catch (err) {
-    error.value = 'Terjadi kesalahan. Silakan coba lagi.'
+    
+    error.value = err.response?.data?.message || 'Gagal login, periksa koneksi Anda.'
   } finally {
     loading.value = false
   }
@@ -39,7 +43,7 @@ const handleSubmit = async () => {
   <div class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root font-display">
     <div class="flex flex-1">
       <div class="flex w-full flex-col lg:flex-row">
-        <!-- Left Column -->
+      
         <div class="relative hidden w-full flex-col items-center justify-center bg-[#197fe6]/10 p-8 dark:bg-background-dark lg:flex lg:w-1/2">
           <div class="absolute inset-0">
             <img

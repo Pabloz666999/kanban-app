@@ -7,9 +7,12 @@ const isAuthenticated = computed(() => !!user.value)
 export function useAuth() {
   const login = async (credentials) => {
     try {
-      const data = await authService.login(credentials)
-      user.value = data.user
-      return { success: true, data }
+      const responseBody = await authService.login(credentials)
+      
+      // Ambil user dari responseBody.data.user (sesuai backend)
+      user.value = responseBody.data.user
+      
+      return { success: true, data: responseBody }
     } catch (error) {
       console.error('Login Error:', error)
       let errorMessage = 'Login gagal'

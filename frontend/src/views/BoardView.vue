@@ -81,7 +81,6 @@ const handleLogout = () => {
   router.push('/login')
 }
 
-// Handler sementara untuk operasi list/card
 const addList = () => {
   // Logic tambah list
   console.log('Add list clicked')
