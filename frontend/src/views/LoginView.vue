@@ -24,7 +24,7 @@ const handleSubmit = async () => {
     // console.log(result.success)
 
     if (result.success) {
-      router.push('/')
+      router.push('/boards')
     } else {
       error.value = result.error
     }
@@ -52,7 +52,7 @@ const handleSubmit = async () => {
           </div>
           <div class="relative z-10 flex max-w-md flex-col items-start text-white">
             <div class="mb-6 flex items-center gap-4">
-              <span class="material-symbols-outlined text-4xl text-white">dashboard</span>
+              <span class="material-symbols-outlined text-4xl text-white">view_kanban</span>
               <span class="text-3xl font-bold">Kanban App</span>
             </div>
             <h2 class="text-4xl font-bold leading-tight mb-4">

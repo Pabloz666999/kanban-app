@@ -3,6 +3,7 @@ import { boardService } from '@/services/boardService'
 
 export function useBoard() {
   const boards = ref([])
+  const publicBoards = ref([])
   const currentBoard = ref(null)
   const lists = ref([])
   const loading = ref(false)
@@ -18,6 +19,21 @@ export function useBoard() {
       }
     } catch (err) {
       error.value = 'Gagal memuat daftar board'
+      console.error(err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const fetchPublicBoards = async () => {
+    loading.value = true
+    try {
+      const response = await boardService.getPublicBoards()
+      if (response.success) {
+        publicBoards.value = response.data
+      }
+    } catch (err) {
+      error.value = 'Gagal memuat daftar board publik'
       console.error(err)
     } finally {
       loading.value = false
@@ -83,6 +99,36 @@ export function useBoard() {
     }
   }
 
+  const updateBoard = async (boardId, boardData) => {
+    try {
+      const res = await boardService.updateBoard(boardId, boardData)
+      if (res.success) {
+        const index = boards.value.findIndex(b => b.id === boardId)
+        if (index !== -1) {
+          boards.value[index] = { ...boards.value[index], ...res.data }
+        }
+        if (currentBoard.value && currentBoard.value.id === boardId) {
+          currentBoard.value = { ...currentBoard.value, ...res.data }
+        }
+      }
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }
+
+  const deleteBoard = async (boardId) => {
+    try {
+      const res = await boardService.deleteBoard(boardId)
+      if (res.success) {
+        boards.value = boards.value.filter(b => b.id !== boardId)
+      }
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }
+
   // --- List Actions ---
   const createList = async (title) => {
     if (!currentBoard.value) return
@@ -106,11 +152,40 @@ export function useBoard() {
     }
   }
 
+  const updateList = async (listId, listData) => {
+    try {
+      const res = await boardService.updateList(listId, listData)
+      if (res.success) {
+        // Update local state
+        const index = lists.value.findIndex(l => l.id === listId)
+        if (index !== -1) {
+          // Preserve existing cards when updating list metadata
+          lists.value[index] = { ...lists.value[index], ...res.data }
+        }
+      }
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }
+
   const archiveList = async (listId) => {
     try {
       const res = await boardService.updateList(listId, { isArchived: true })
       if (res.success) {
         // Hapus dari state lokal
+        lists.value = lists.value.filter(l => l.id !== listId)
+      }
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }
+
+  const deleteList = async (listId) => {
+    try {
+      const res = await boardService.deleteList(listId)
+      if (res.success) {
         lists.value = lists.value.filter(l => l.id !== listId)
       }
     } catch (err) {
@@ -230,15 +305,21 @@ export function useBoard() {
 
   return {
     boards,
+    publicBoards,
     currentBoard,
     lists,
     loading,
     error,
     fetchBoards,
+    fetchPublicBoards,
     fetchBoardDetail,
     createBoard,
+    updateBoard,
+    deleteBoard,
     createList,
+    updateList,
     archiveList,
+    deleteList,
     moveList,
     createCard,
     updateCard,

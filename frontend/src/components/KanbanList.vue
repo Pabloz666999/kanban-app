@@ -8,14 +8,18 @@ const props = defineProps({
   list: {
     type: Object,
     required: true
+  },
+  readOnly: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['add-card', 'open-card-detail'])
-const { archiveList, moveList } = useBoard()
+const emit = defineEmits(['add-card', 'open-card-detail', 'edit-list'])
+const { deleteList } = useBoard()
 
 const isMenuOpen = ref(false)
-const showConfirmArchive = ref(false)
+const showConfirmDelete = ref(false)
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
@@ -30,26 +34,23 @@ const handleAddCard = () => {
   emit('add-card', props.list.id)
 }
 
+const handleEditList = () => {
+  closeMenu()
+  emit('edit-list', props.list)
+}
+
 const handleCardClick = (card) => {
   emit('open-card-detail', card)
 }
 
-const confirmArchiveList = () => {
+const confirmDeleteList = () => {
   closeMenu()
-  showConfirmArchive.value = true
+  showConfirmDelete.value = true
 }
 
-const executeArchiveList = async () => {
-  await archiveList(props.list.id)
-  showConfirmArchive.value = false
-}
-
-const handleMoveList = async () => {
-  const newPos = prompt('Masukkan posisi baru (angka):', props.list.position)
-  if (newPos && !isNaN(newPos)) {
-    closeMenu()
-    await moveList(props.list.id, parseInt(newPos))
-  }
+const executeDeleteList = async () => {
+  await deleteList(props.list.id)
+  showConfirmDelete.value = false
 }
 </script>
 
@@ -65,7 +66,7 @@ const handleMoveList = async () => {
       </h2>
       
       <!-- Dropdown Menu Trigger -->
-      <div class="relative">
+      <div v-if="!readOnly" class="relative">
         <button 
           @click.stop="toggleMenu"
           class="text-text-light-secondary dark:text-text-dark-secondary hover:text-text-light-primary dark:hover:text-text-dark-primary transition-colors p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5"
@@ -83,14 +84,14 @@ const handleMoveList = async () => {
             <span class="material-symbols-outlined text-lg">add</span>
             Tambah Kartu
           </button>
-          <button @click="handleMoveList" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
-            <span class="material-symbols-outlined text-lg">low_priority</span>
-            Ubah Posisi
+          <button @click="handleEditList" class="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">edit</span>
+            Edit Daftar
           </button>
           <div class="h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
-          <button @click="confirmArchiveList" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
-            <span class="material-symbols-outlined text-lg">archive</span>
-            Arsipkan
+          <button @click="confirmDeleteList" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">delete</span>
+            Hapus Daftar
           </button>
         </div>
       </div>
@@ -110,6 +111,7 @@ const handleMoveList = async () => {
       
       <!-- Button Add Card (Inside scrollable area) -->
       <button 
+        v-if="!readOnly"
         @click="handleAddCard"
         class="flex w-full items-center gap-2 rounded-lg p-2 text-sm font-medium text-text-light-secondary dark:text-text-dark-secondary hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-light-primary dark:hover:text-text-dark-primary transition-colors shrink-0"
       >
@@ -118,16 +120,16 @@ const handleMoveList = async () => {
       </button>
     </div>
 
-    <!-- Confirm Modal for Archive -->
+    <!-- Confirm Modal for Delete -->
     <ConfirmModal
-      :is-open="showConfirmArchive"
-      title="Arsipkan Daftar"
-      message="Apakah Anda yakin ingin mengarsipkan daftar ini? Kartu di dalamnya juga akan ikut terarsip."
-      confirm-text="Arsipkan"
+      :is-open="showConfirmDelete"
+      title="Hapus Daftar"
+      message="Apakah Anda yakin ingin menghapus daftar ini? Semua kartu di dalamnya akan ikut terhapus permanen."
+      confirm-text="Hapus"
       cancel-text="Batal"
       :is-destructive="true"
-      @close="showConfirmArchive = false"
-      @confirm="executeArchiveList"
+      @close="showConfirmDelete = false"
+      @confirm="executeDeleteList"
     />
   </div>
 </template>

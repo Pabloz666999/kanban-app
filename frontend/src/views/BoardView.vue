@@ -1,9 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import KanbanList from '@/components/KanbanList.vue'
-import CreateListModal from '@/components/CreateListModal.vue'
+import ListModal from '@/components/ListModal.vue'
 import CreateCardModal from '@/components/CreateCardModal.vue'
-import CreateBoardModal from '@/components/CreateBoardModal.vue'
 import CardDetailModal from '@/components/CardDetailModal.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -12,16 +11,20 @@ import { useBoard } from '@/composables/useBoard'
 
 const router = useRouter()
 const route = useRoute()
-const { logout } = useAuth()
-const { currentBoard, lists, loading, fetchBoardDetail, createList, createCard, updateCard, deleteCard, moveCard } = useBoard()
+const { logout, user } = useAuth()
+const { currentBoard, lists, loading, fetchBoardDetail, createList, updateList, moveList, createCard, updateCard, updateCardCompletion, deleteCard, moveCard } = useBoard()
 
-const showCreateListModal = ref(false)
+const showListModal = ref(false)
 const showCreateCardModal = ref(false)
-const showCreateBoardModal = ref(false)
 const showLogoutModal = ref(false)
 const showCardDetailModal = ref(false)
 const preselectedListId = ref('')
 const selectedCard = ref({})
+const selectedList = ref(null)
+
+const isOwner = computed(() => {
+  return currentBoard.value?.ownerId === user.value?.id
+})
 
 // Fetch data berdasarkan ID di URL
 const loadBoardData = async () => {
@@ -46,12 +49,37 @@ const confirmLogout = () => {
   showLogoutModal.value = false
 }
 
-const handleCreateList = async (listData) => {
+const openListModal = (list = null) => {
+  selectedList.value = list
+  showListModal.value = true
+}
+
+const handleListCreate = async (listData) => {
   try {
     await createList(listData.title)
-    showCreateListModal.value = false
+    showListModal.value = false
   } catch (error) {
     alert('Gagal membuat daftar baru.')
+  }
+}
+
+const handleListUpdate = async (listData) => {
+  try {
+    // 1. Update Basic Info (Title, Description)
+    await updateList(listData.id, { 
+        title: listData.title, 
+        description: listData.description 
+    })
+
+    // 2. Check if position changed
+    const currentList = lists.value.find(l => l.id === listData.id)
+    if (currentList && listData.position !== undefined && listData.position !== currentList.position) {
+        await moveList(listData.id, listData.position)
+    }
+
+    showListModal.value = false
+  } catch (error) {
+    alert('Gagal mengupdate daftar.')
   }
 }
 
@@ -68,22 +96,6 @@ const handleCreateCard = async (cardData) => {
   }
 }
 
-const handleCreateBoard = () => {
-  showCreateBoardModal.value = true
-}
-
-const confirmCreateBoard = async (boardData) => {
-  try {
-    const newBoard = await createBoard(boardData.title, boardData.description)
-    if (newBoard) {
-      await fetchBoardDetail(newBoard.id)
-      showCreateBoardModal.value = false
-    }
-  } catch (error) {
-    alert('Gagal membuat board baru.')
-  }
-}
-
 const handleOpenCardDetail = (card) => {
   selectedCard.value = card
   showCardDetailModal.value = true
@@ -96,11 +108,22 @@ const handleUpdateCard = async (updatedCard) => {
 
     // Panggil API
     await updateCard(updatedCard.id, updatedCard.listId, updatedCard)
-    
+
     // Refresh board untuk sinkronisasi list jika perlu (misal status done berubah warna)
     await fetchBoardDetail(route.params.id)
   } catch (error) {
     console.error('Update failed', error)
+  }
+}
+
+const handleToggleComplete = async (card) => {
+  try {
+    // Update local state immediately for modal responsiveness
+    selectedCard.value = { ...selectedCard.value, isCompleted: card.isCompleted }
+    
+    await updateCardCompletion(card.id, card.listId)
+  } catch (error) {
+    console.error('Toggle completion failed', error)
   }
 }
 
@@ -109,9 +132,9 @@ const handleMoveCard = async ({ cardId, fromListId, toListId }) => {
         // Hitung posisi baru (paling akhir di list tujuan)
         const targetList = lists.value.find(l => l.id === toListId)
         const newPosition = targetList ? targetList.cards.length + 1 : 1
-        
+
         await moveCard(cardId, fromListId, toListId, newPosition)
-        
+
         // Update selected card listId agar UI modal tahu kartu sudah pindah
         selectedCard.value.listId = toListId
     } catch (error) {
@@ -129,11 +152,11 @@ const handleDeleteCard = async (cardId) => {
 }
 
 const goHome = () => {
-  router.push('/')
+  router.push('/boards')
 }
 
 const addList = () => {
-  showCreateListModal.value = true
+  openListModal()
 }
 
 const addCard = () => {
@@ -159,6 +182,9 @@ const openCreateCardModal = (listId) => {
         <h1 class="text-lg font-bold">
           {{ currentBoard ? currentBoard.title : 'Memuat Board...' }}
         </h1>
+        <div v-if="currentBoard && !isOwner" class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200">
+          View Only
+        </div>
       </div>
       <div class="flex flex-1 items-center justify-end gap-6">
         <div class="flex items-center gap-4">
@@ -166,14 +192,14 @@ const openCreateCardModal = (listId) => {
             <span class="material-symbols-outlined text-xl">timer</span>
             Pomodoro
           </router-link>
-          
+
           <a class="flex items-center gap-1.5 text-sm font-medium cursor-pointer" @click="handleLogout">
             <span class="material-symbols-outlined text-xl">logout</span>
             Logout
           </a>
         </div>
         <div class="flex items-center gap-2">
-          <button @click="addCard" class="flex min-w-[84px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-blue-600 transition-colors">
+          <button v-if="isOwner" @click="addCard" class="flex min-w-[84px] cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-blue-600 transition-colors">
             <span class="material-symbols-outlined text-xl">add</span>
             <span class="truncate">Add Card</span>
           </button>
@@ -203,49 +229,35 @@ const openCreateCardModal = (listId) => {
       </div>
 
       <template v-else>
-        <!-- Chips/Filters Bar -->
-        <div class="shrink-0 border-b border-solid border-border-light dark:border-border-dark px-6 py-3 bg-surface-light/50 dark:bg-surface-dark/50 backdrop-blur-sm">
-          <div class="flex gap-3 items-center">
-            <button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary/10 dark:bg-primary/20 pl-4 pr-2 text-primary">
-              <p class="text-sm font-medium leading-normal">All tasks</p>
-              <span class="material-symbols-outlined text-base">expand_more</span>
-            </button>
-            <button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-border-light dark:bg-border-dark pl-4 pr-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-              <p class="text-sm font-medium leading-normal">UI Design</p>
-              <span class="material-symbols-outlined text-base">expand_more</span>
-            </button>
-            <button class="flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-border-light dark:bg-border-dark pl-4 pr-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-              <p class="text-sm font-medium leading-normal">Urgent</p>
-              <span class="material-symbols-outlined text-base">expand_more</span>
-            </button>
-          </div>
-        </div>
-
         <!-- Kanban Board -->
         <div class="flex flex-1 gap-6 p-6 overflow-x-auto">
-          <KanbanList 
-            v-for="list in lists" 
-            :key="list.id" 
-            :list="list" 
+          <KanbanList
+            v-for="list in lists"
+            :key="list.id"
+            :list="list"
+            :read-only="!isOwner"
             @add-card="openCreateCardModal"
+            @edit-list="openListModal"
             @open-card-detail="handleOpenCardDetail"
           />
-          
+
           <!-- Add a list button -->
-          <div class="w-80 shrink-0">
+          <div v-if="isOwner" class="w-80 shrink-0">
             <button @click="addList" class="flex w-full items-center justify-center gap-2 rounded-xl bg-black/5 dark:bg-white/5 h-12 text-sm font-medium text-text-light-secondary dark:text-text-dark-secondary hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
               <span class="material-symbols-outlined text-xl">add</span>
-              Add another list
+              Daftar Baru
             </button>
           </div>
         </div>
       </template>
 
       <!-- Modals -->
-      <CreateListModal 
-        :is-open="showCreateListModal"
-        @close="showCreateListModal = false"
-        @create="handleCreateList"
+      <ListModal
+        :is-open="showListModal"
+        :list="selectedList"
+        @close="showListModal = false"
+        @create="handleListCreate"
+        @update="handleListUpdate"
       />
       <CreateCardModal
         :is-open="showCreateCardModal"
@@ -254,17 +266,14 @@ const openCreateCardModal = (listId) => {
         @close="showCreateCardModal = false"
         @create="handleCreateCard"
       />
-      <CreateBoardModal
-        :is-open="showCreateBoardModal"
-        @close="showCreateBoardModal = false"
-        @create="confirmCreateBoard"
-      />
       <CardDetailModal
         :is-open="showCardDetailModal"
         :card="selectedCard"
         :lists="lists"
+        :read-only="!isOwner"
         @close="showCardDetailModal = false"
         @update="handleUpdateCard"
+        @toggle-complete="handleToggleComplete"
         @move="handleMoveCard"
         @delete="handleDeleteCard"
       />

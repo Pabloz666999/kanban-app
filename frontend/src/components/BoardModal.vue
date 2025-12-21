@@ -1,25 +1,58 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const props = defineProps({
-  isOpen: Boolean
+  isOpen: Boolean,
+  board: {
+    type: Object,
+    default: null
+  }
 })
 
-const emit = defineEmits(['close', 'create'])
+const emit = defineEmits(['close', 'create', 'update'])
 
 const title = ref('')
 const description = ref('')
+const isPrivate = ref(true)
+const backgroundColor = ref('#197fe6')
 const loading = ref(false)
+
+const isEdit = computed(() => !!props.board)
+
+watch(() => props.isOpen, (newVal) => {
+  if (newVal) {
+    if (props.board) {
+      title.value = props.board.title
+      description.value = props.board.description || ''
+      isPrivate.value = props.board.isPrivate
+      backgroundColor.value = props.board.backgroundColor || '#197fe6'
+    } else {
+      title.value = ''
+      description.value = ''
+      isPrivate.value = true
+      backgroundColor.value = '#197fe6'
+    }
+  }
+})
 
 const handleSubmit = () => {
   if (!title.value.trim()) return
   
   loading.value = true
-  emit('create', { title: title.value, description: description.value })
   
-  // Reset
-  title.value = ''
-  description.value = ''
+  const payload = {
+    title: title.value,
+    description: description.value,
+    isPrivate: isPrivate.value,
+    backgroundColor: backgroundColor.value
+  }
+
+  if (isEdit.value) {
+    emit('update', { id: props.board.id, ...payload })
+  } else {
+    emit('create', payload)
+  }
+  
   loading.value = false
 }
 </script>
@@ -33,7 +66,9 @@ const handleSubmit = () => {
     <div class="relative w-full max-w-[480px] bg-surface-light dark:bg-surface-dark rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
       <!-- Modal Header -->
       <div class="flex items-center justify-between px-6 pt-6 pb-2">
-        <h2 class="text-[#0e141b] dark:text-white text-xl font-bold leading-tight tracking-tight">Buat Board Baru</h2>
+        <h2 class="text-[#0e141b] dark:text-white text-xl font-bold leading-tight tracking-tight">
+          {{ isEdit ? 'Edit Board' : 'Buat Board Baru' }}
+        </h2>
         <button @click="$emit('close')" class="group p-2 -mr-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50">
           <span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 text-xl font-medium">close</span>
         </button>
@@ -56,6 +91,7 @@ const handleSubmit = () => {
             @keyup.enter="handleSubmit"
           />
         </div>
+
         <!-- Input: Deskripsi -->
         <div class="flex flex-col gap-2">
           <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal" for="board-desc">
@@ -67,6 +103,25 @@ const handleSubmit = () => {
             id="board-desc" 
             placeholder="Deskripsikan tujuan board ini..."
           ></textarea>
+        </div>
+
+        <!-- Input: Visibility -->
+        <div class="flex flex-col gap-2">
+          <span class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal">Visibilitas</span>
+          <label class="flex items-center gap-3 p-3 rounded-lg border border-[#d0dbe7] dark:border-slate-600 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <div class="relative flex items-center">
+              <input type="checkbox" v-model="isPrivate" class="peer sr-only">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 dark:peer-focus:ring-primary/50 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-sm font-semibold text-slate-900 dark:text-white">
+                {{ isPrivate ? 'Privat' : 'Publik' }}
+              </span>
+              <span class="text-xs text-slate-500 dark:text-slate-400">
+                {{ isPrivate ? 'Hanya Anda yang dapat melihat board ini.' : 'Semua orang dapat melihat board ini.' }}
+              </span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -83,7 +138,7 @@ const handleSubmit = () => {
           :disabled="loading || !title.trim()"
           class="px-6 py-2.5 rounded-lg bg-primary hover:bg-blue-600 text-white text-sm font-semibold shadow-md shadow-blue-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-1 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ loading ? 'Memproses...' : 'Buat Board' }}
+          {{ loading ? 'Memproses...' : (isEdit ? 'Simpan Perubahan' : 'Buat Board') }}
         </button>
       </div>
     </div>

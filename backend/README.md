@@ -1,50 +1,90 @@
 # ExpressJS Kanban Backend
 
-Project Overview
-- RESTful API for Kanban board management
-- Built with Node.js and Express framework
-- Database management using Sequelize ORM
-- User authentication with JWT and bcrypt
+RESTful API backend for the Kanban Board application, built with Node.js, Express, and MySQL.
 
-Prerequisites
-- Node.js version 18 or higher
-- MySQL database server
-- NPM or Yarn package manager
+## Prerequisites
 
-Installation Steps
-- Clone the repository to local machine
-- Navigate to the project backend directory
-- Run npm install to install dependencies
+- **Node.js** (v18+)
+- **MySQL** (Database server)
+- **NPM** (Package manager)
 
-Environment Configuration
-- Copy .env.example to a new file named .env
-- Update DB_HOST with database host address
-- Update DB_NAME with target database name
-- Update DB_USER and DB_PASSWORD with database credentials
-- Set JWT_SECRET with a secure random string
+## Installation & Setup
 
-Database Setup
-- Create the database in MySQL matching DB_NAME
-- Run npm run migrate to execute SQL migrations
-- Ensure tables for users, boards, lists, and cards are created
+1.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
 
-Available Scripts
-- npm run dev: Start the server with nodemon for development
-- npm start: Start the server in production mode
-- npm run migrate: Run database migration scripts
-- npm run lint: Check code style with ESLint
+2.  **Environment Configuration**
+    Create a `.env` file in the `backend` root directory (copy from `.env.example`).
+    ```bash
+    cp .env.example .env
+    ```
+    Edit the `.env` file with your database credentials and secret keys:
+    ```env
+    PORT=3000
+    NODE_ENV=development
+    DB_HOST=localhost
+    DB_PORT=3306  # Adjust if your MySQL uses a different port
+    DB_NAME=db_kanban_app
+    DB_USER=root
+    DB_PASSWORD=your_password # Biasanya kosong
+    JWT_SECRET=your_secure_secret_key
+    JWT_EXPIRES_IN=7d
+    ```
 
-Project Structure
-- src/app.mjs: Application entry point and configuration
-- src/controllers: Logic for handling API requests
-- src/models: Sequelize database model definitions
-- src/routes: API endpoint definitions
-- src/middleware: Custom middleware for auth and error handling
-- src/migrations: SQL files for database schema
-- src/validations: Request body validation logic
+3.  **Database Setup**
+    *   Create a MySQL database named `db_kanban_app` (or whatever you set in `DB_NAME`).
+    *   Run migrations to create tables:
+        ```bash
+        npm run migrate
+        ```
 
-Core Features
-- Authentication: Register and login for users
-- Board Management: Create, read, update, and delete boards
-- List Management: Organise cards within boards
-- Card Management: Create and manage tasks on boards
+4.  **Run Server**
+    *   **Development:** `npm run dev` (uses nodemon)
+    *   **Production:** `npm start`
+
+## API Endpoints
+
+Base URL: `http://localhost:3000/api`
+
+### Auth (`/auth`)
+*   `POST /register` - Register a new user
+    *   Body: `{ "name": "...", "email": "...", "password": "..." }`
+*   `POST /login` - Login user
+    *   Body: `{ "email": "...", "password": "..." }`
+
+### Boards (`/boards`) - Requires Auth
+*   `GET /` - Get all boards for the logged-in user
+*   `POST /` - Create a new board
+    *   Body: `{ "title": "...", "description": "...", "backgroundColor": "..." }`
+*   `GET /:id` - Get board details
+*   `PUT /:id` - Update board
+*   `DELETE /:id` - Delete board
+
+### Lists (`/lists`) - Requires Auth
+*   `GET /?boardId=:id` - Get all lists for a specific board
+*   `POST /` - Create a new list
+    *   Body: `{ "title": "...", "boardId": 1, "position": 0 }`
+*   `PUT /:id` - Update list
+*   `PUT /:id/move` - Move list position
+    *   Body: `{ "position": 1 }`
+*   `DELETE /:id` - Delete list
+
+### Cards (`/cards`) - Requires Auth
+*   `GET /?listId=:id` - Get all cards for a specific list
+*   `POST /` - Create a new card
+    *   Body: `{ "title": "...", "listId": 1 }`
+*   `GET /:id` - Get card details
+*   `PUT /:id` - Update card
+*   `PUT /:id/move` - Move card to another list or position
+    *   Body: `{ "listId": 2, "position": 0 }`
+*   `PUT /:id/complete` - Toggle completion status
+*   `DELETE /:id` - Delete card
+
+## Scripts
+
+*   `npm run dev`: Start dev server
+*   `npm start`: Start production server
+*   `npm run migrate`: Run database migrations
+*   `npm run lint`: Lint code

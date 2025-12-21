@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import ConfirmModal from './ConfirmModal.vue'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -10,14 +11,19 @@ const props = defineProps({
   lists: {
     type: Array,
     default: () => []
+  },
+  readOnly: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['close', 'update', 'delete', 'move'])
+const emit = defineEmits(['close', 'update', 'delete', 'move', 'toggle-complete'])
 
 const localCard = ref({})
 const isEditingDesc = ref(false)
 const descriptionBuffer = ref('')
+const showConfirmDelete = ref(false)
 
 // Initialize local state from props
 watch(() => props.card, (newCard) => {
@@ -38,6 +44,7 @@ const formattedDueDate = computed(() => {
 })
 
 const handleTitleUpdate = () => {
+  if (props.readOnly) return
   if (localCard.value.title !== props.card.title) {
     emit('update', { ...localCard.value })
   }
@@ -53,7 +60,7 @@ const handleDescriptionSave = () => {
 
 const toggleCompletion = () => {
   localCard.value.isCompleted = !localCard.value.isCompleted
-  emit('update', { ...localCard.value })
+  emit('toggle-complete', { ...localCard.value })
 }
 
 const handleDateChange = (e) => {
@@ -70,10 +77,13 @@ const handleListChange = (newListId) => {
   }
 }
 
-const handleDelete = () => {
-  if (confirm('Apakah Anda yakin ingin menghapus kartu ini?')) {
-    emit('delete', localCard.value.id)
-  }
+const handleDeleteClick = () => {
+  showConfirmDelete.value = true
+}
+
+const executeDelete = () => {
+  emit('delete', localCard.value.id)
+  showConfirmDelete.value = false
 }
 </script>
 
@@ -107,7 +117,9 @@ const handleDelete = () => {
           <input 
             v-model="localCard.title" 
             @blur="handleTitleUpdate"
+            :readonly="readOnly"
             class="text-[#0e141b] dark:text-white tracking-tight text-2xl md:text-3xl font-bold leading-tight text-left bg-transparent border-none focus:ring-0 focus:outline-none p-0 w-full"
+            :class="{ 'cursor-default': readOnly }"
             type="text"
           />
         </div>
@@ -120,7 +132,7 @@ const handleDelete = () => {
               Deskripsi
             </h3>
             <button 
-              v-if="!isEditingDesc" 
+              v-if="!isEditingDesc && !readOnly" 
               @click="isEditingDesc = true" 
               class="text-primary text-sm font-medium hover:bg-primary/10 px-3 py-1 rounded transition-colors"
             >
@@ -141,28 +153,21 @@ const handleDelete = () => {
             </div>
             <div 
               v-else 
-              @click="isEditingDesc = true"
-              class="text-[#0e141b] dark:text-gray-300 text-base font-normal leading-relaxed bg-background-light dark:bg-black/20 p-4 rounded-lg border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-colors cursor-pointer min-h-[60px]"
+              @click="!readOnly && (isEditingDesc = true)"
+              class="text-[#0e141b] dark:text-gray-300 text-base font-normal leading-relaxed bg-background-light dark:bg-black/20 p-4 rounded-lg border border-transparent transition-colors min-h-[60px]"
+              :class="{ 'hover:border-gray-200 dark:hover:border-gray-600 cursor-pointer': !readOnly }"
             >
               <p v-if="localCard.description" class="whitespace-pre-line">{{ localCard.description }}</p>
               <p v-else class="text-gray-400 italic">Belum ada deskripsi.</p>
             </div>
           </div>
         </div>
-
-        <!-- Activity (Placeholder for now) -->
-        <div class="flex flex-col gap-4 mt-4 opacity-50 pointer-events-none">
-          <h3 class="text-[#0e141b] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex items-center gap-3">
-            <span class="material-symbols-outlined text-[#4e7397]">list</span>
-            Aktivitas (Coming Soon)
-          </h3>
-        </div>
       </div>
 
       <!-- Sidebar (Right) -->
       <div class="w-full md:w-[300px] bg-gray-50 dark:bg-[#151e29] border-l border-gray-100 dark:border-gray-700 p-6 flex flex-col gap-6 shrink-0 overflow-y-auto max-h-[85vh]">
         <!-- Action Toolbar -->
-        <div class="flex flex-col gap-2">
+        <div v-if="!readOnly" class="flex flex-col gap-2">
           <span class="text-xs font-bold text-[#4e7397] uppercase tracking-wider mb-1">Actions</span>
           <button 
             @click="toggleCompletion"
@@ -172,14 +177,14 @@ const handleDelete = () => {
             <span class="material-symbols-outlined text-[20px]">{{ localCard.isCompleted ? 'check_box' : 'check_box_outline_blank' }}</span>
             {{ localCard.isCompleted ? 'Selesai' : 'Tandai Selesai' }}
           </button>
-          <button @click="handleDelete" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors w-full text-left">
+          <button @click="handleDeleteClick" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors w-full text-left">
             <span class="material-symbols-outlined text-[20px]">delete</span>
             Hapus Kartu
           </button>
         </div>
 
         <!-- Move Section -->
-        <div class="flex flex-col gap-2">
+        <div v-if="!readOnly" class="flex flex-col gap-2">
           <span class="text-xs font-bold text-[#4e7397] uppercase tracking-wider">Pindah ke Daftar</span>
           <div class="relative w-full">
             <select 
@@ -203,11 +208,25 @@ const handleDelete = () => {
               type="date" 
               :value="formattedDueDate"
               @change="handleDateChange"
-              class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-sm hover:border-primary transition-all text-sm font-medium text-[#0e141b] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+              :disabled="readOnly"
+              class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 shadow-sm transition-all text-sm font-medium text-[#0e141b] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              :class="!readOnly ? 'hover:border-primary' : ''"
             />
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Confirm Delete Modal -->
+    <ConfirmModal
+      :is-open="showConfirmDelete"
+      title="Hapus Kartu"
+      message="Apakah Anda yakin ingin menghapus kartu ini? Tindakan ini tidak dapat dibatalkan."
+      confirm-text="Hapus"
+      cancel-text="Batal"
+      :is-destructive="true"
+      @close="showConfirmDelete = false"
+      @confirm="executeDelete"
+    />
   </div>
 </template>

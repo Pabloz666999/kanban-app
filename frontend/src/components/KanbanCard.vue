@@ -16,6 +16,11 @@ const formattedDate = computed(() => {
   return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
 })
 
+const isExpired = computed(() => {
+  if (!props.card.dueDate || props.card.isCompleted) return false
+  return new Date(props.card.dueDate) < new Date()
+})
+
 const tagColorClass = computed(() => {
   const colors = {
     blue: 'text-blue-500 bg-blue-500/10',
@@ -32,7 +37,7 @@ const tagColorClass = computed(() => {
   <div 
     @click="$emit('click', card)"
     class="flex flex-col rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.07)] bg-surface-light dark:bg-background-dark border border-transparent dark:border-border-dark cursor-pointer hover:shadow-md transition-shadow" 
-    :class="{ 'opacity-70': card.completed }"
+    :class="{ 'opacity-60': card.isCompleted }"
   >
     
     <!-- Cover Image -->
@@ -45,7 +50,7 @@ const tagColorClass = computed(() => {
       </span>
 
       <!-- Title -->
-      <p class="text-base font-bold text-text-light-primary dark:text-text-dark-primary" :class="{ 'line-through': card.completed }">
+      <p class="text-base font-bold text-text-light-primary dark:text-text-dark-primary transition-all" :class="{ 'line-through text-slate-500 dark:text-slate-500': card.isCompleted }">
         {{ card.title }}
       </p>
 
@@ -55,20 +60,22 @@ const tagColorClass = computed(() => {
       </p>
 
       <!-- Footer -->
-      <div class="mt-2 flex items-center justify-between">
+      <div class="mt-2 flex items-center justify-between min-h-[20px]">
         <!-- Date / Status -->
-        <div class="flex items-center gap-2 text-sm" :class="[
-          card.isUrgent ? 'text-red-500' : 
-          card.completed ? 'text-green-600 dark:text-green-500' : 
-          'text-text-light-secondary dark:text-text-dark-secondary'
-        ]">
-          <template v-if="card.completed">
-             <span class="material-symbols-outlined text-lg">task_alt</span>
-             <span>Selesai</span>
+        <div class="flex items-center gap-2 text-xs font-medium">
+          <template v-if="card.isCompleted">
+             <div class="flex items-center gap-1 text-green-600 dark:text-green-500 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
+               <span class="material-symbols-outlined text-sm">check_circle</span>
+               <span>Selesai</span>
+             </div>
           </template>
+          
           <template v-else-if="formattedDate">
-             <span class="material-symbols-outlined text-lg">calendar_today</span>
-             <span>{{ formattedDate }}</span>
+             <div class="flex items-center gap-1 px-2 py-0.5 rounded-full" 
+               :class="isExpired ? 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30' : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'">
+               <span class="material-symbols-outlined text-sm">{{ isExpired ? 'warning' : 'schedule' }}</span>
+               <span>{{ formattedDate }}</span>
+             </div>
           </template>
         </div>
 

@@ -7,6 +7,11 @@ export const boardService = {
     return response.data
   },
 
+  async getPublicBoards() {
+    const response = await api.get('/boards/public')
+    return response.data
+  },
+
   async createBoard(boardData) {
     const response = await api.post('/boards', boardData)
     return response.data

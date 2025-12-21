@@ -23,6 +23,12 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      path: '/boards',
+      name: 'Dashboard',
+      component: () => import('@/views/DashboardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/board/:id',
       name: 'Board',
       component: () => import('@/views/BoardView.vue'),
@@ -49,12 +55,8 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
   } else if (to.meta.requiresGuest && isAuthenticated) {
-    // Jika user sudah login dan mencoba akses login/register, biarkan di halaman saat ini atau ke dashboard jika dari luar
-    if (to.path === '/login' || to.path === '/register') {
-      next('/')
-    } else {
-      next()
-    }
+    // Jika user sudah login dan mencoba akses login/register, redirect ke dashboard
+    next('/boards')
   } else {
     next()
   }
