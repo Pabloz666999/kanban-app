@@ -6,6 +6,7 @@ import {
 } from "../validations/boardValidation.mjs"
 import {
   getAllBoards,
+  getPublicBoards,
   createBoard,
   getBoardById,
   updateBoard,
@@ -17,6 +18,7 @@ const router = express.Router()
 router.use(authenticateToken) // Semua routes board butuh authentication
 
 router.get("/", getAllBoards)
+router.get("/public", getPublicBoards)
 router.post("/", ...createBoardValidation, createBoard)
 router.get("/:id", getBoardById)
 router.put("/:id", ...updateBoardValidation, updateBoard)

@@ -19,36 +19,44 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
+      component: () => import('@/views/HomeView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/boards',
+      name: 'Dashboard',
+      component: () => import('@/views/DashboardView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/board/:id',
+      name: 'Board',
       component: () => import('@/views/BoardView.vue'),
       meta: { requiresAuth: true }
     },
-        {
-         path: '/pomodoro',
-         name: 'Pomodoro',
-         component: () => import('@/views/PomodoroView.vue'),
-         meta: { requiresAuth: false }
-        },
-        {
-          path: '/privacy-policy',
-          name: 'PrivacyPolicy',
-          component: () => import('@/views/PrivacyPolicy.vue'),
-          meta: { requiresAuth: false }
-        },
-        {
-          path: '/termscondition',
-          name: 'TermsAndCondition',
-          component: () => import('@/views/TermsAndConditionView.vue'),
-          meta: { requiresAuth: false }
-        }
-      ]
-    })
+    {
+      path: '/pomodoro',
+      name: 'Pomodoro',
+      component: () => import('@/views/PomodoroView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/privacy-policy',
+      name: 'PrivacyPolicy',
+      component: () => import('@/views/PrivacyPolicy.vue'),
+      meta: { requiresAuth: false }
+    }
+  ]
+})
+
 router.beforeEach((to, from, next) => {
   const isAuthenticated = authService.isAuthenticated()
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
   } else if (to.meta.requiresGuest && isAuthenticated) {
-    next('/')
+    // Jika user sudah login dan mencoba akses login/register, redirect ke dashboard
+    next('/boards')
   } else {
     next()
   }

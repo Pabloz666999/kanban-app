@@ -7,11 +7,17 @@ const getAllLists = async (req, res) => {
     const { boardId } = req.query
 
     const board = await Board.findOne({
-      where: { id: boardId, ownerId: req.user.id }
+      where: {
+        id: boardId,
+        [Op.or]: [
+          { ownerId: req.user.id },
+          { isPrivate: false }
+        ]
+      }
     })
 
     if (!board) {
-      return errorResponse(res, "Board not found", HTTP_STATUS.NOT_FOUND)
+      return errorResponse(res, "Board not found or private", HTTP_STATUS.NOT_FOUND)
     }
 
     const lists = await List.findAll({
@@ -110,56 +116,67 @@ const moveList = async (req, res) => {
     const { id } = req.params
     const { position } = req.body
 
-    const list = await List.findByPk(id, {
-      include: [{ model: Board, as: "board" }]
+    await List.sequelize.transaction(async (t) => {
+      const list = await List.findByPk(id, {
+        include: [{ model: Board, as: "board" }],
+        transaction: t
+      })
+
+      if (!list) {
+        throw new Error("List not found")
+      }
+
+      if (list.board.ownerId !== req.user.id) {
+        throw new Error("Forbidden")
+      }
+
+      const oldPosition = list.position
+      const newPosition = position
+
+      if (oldPosition === newPosition) {
+        return
+      }
+
+      if (newPosition > oldPosition) {
+        await List.update(
+          { position: List.sequelize.literal("position - 1") },
+          {
+            where: {
+              boardId: list.boardId,
+              position: { [Op.gt]: oldPosition, [Op.lte]: newPosition }
+            },
+            transaction: t
+          }
+        )
+      } else {
+        await List.update(
+          { position: List.sequelize.literal("position + 1") },
+          {
+            where: {
+              boardId: list.boardId,
+              position: { [Op.gte]: newPosition, [Op.lt]: oldPosition }
+            },
+            transaction: t
+          }
+        )
+      }
+
+      await list.update({ position: newPosition }, { transaction: t })
     })
 
-    if (!list) {
-      return errorResponse(res, "List not found", HTTP_STATUS.NOT_FOUND)
-    }
-
-    if (list.board.ownerId !== req.user.id) {
-      return errorResponse(res, "You don't have permission to move this list", HTTP_STATUS.FORBIDDEN)
-    }
-
-    const oldPosition = list.position
-    const newPosition = position
-
-    if (oldPosition === newPosition) {
-      return successResponse(res, list, "List position unchanged")
-    }
-
-    if (newPosition > oldPosition) {
-      await List.update(
-        { position: List.sequelize.literal("position - 1") },
-        {
-          where: {
-            boardId: list.boardId,
-            position: { [Op.gt]: oldPosition, [Op.lte]: newPosition }
-          }
-        }
-      )
-    } else {
-      await List.update(
-        { position: List.sequelize.literal("position + 1") },
-        {
-          where: {
-            boardId: list.boardId,
-            position: { [Op.gte]: newPosition, [Op.lt]: oldPosition }
-          }
-        }
-      )
-    }
-
-    await list.update({ position: newPosition })
-
     const updatedLists = await List.findAll({
-      where: { boardId: list.boardId },
+      where: { boardId: (await List.findByPk(req.params.id)).boardId },
       order: [["position", "ASC"]]
     })
 
     return successResponse(res, updatedLists, "List moved successfully")
   } catch (error) {
+    if (error.message === "List not found") {
+      return errorResponse(res, "List not found", HTTP_STATUS.NOT_FOUND)
+    }
+    if (error.message === "Forbidden") {
+      return errorResponse(res, "You don't have permission to move this list", HTTP_STATUS.FORBIDDEN)
+    }
     return errorResponse(res, error.message, HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
 }

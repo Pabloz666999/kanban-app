@@ -42,7 +42,6 @@ const login = async (req, res) => {
     if (!user || !(await user.comparePassword(password))) {
       return errorResponse(res, "Invalid credentials", HTTP_STATUS.UNAUTHORIZED)
     }
-    
 
     const token = generateToken(user.id)
 
