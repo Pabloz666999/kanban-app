@@ -8,60 +8,93 @@ const props = defineProps({
   }
 })
 
+defineEmits(['click'])
+
+const formattedDate = computed(() => {
+  if (!props.card.dueDate) return null
+  const date = new Date(props.card.dueDate)
+  return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })
+})
+
+const isExpired = computed(() => {
+  if (!props.card.dueDate || props.card.isCompleted) return false
+  return new Date(props.card.dueDate) < new Date()
+})
+
 const tagColorClass = computed(() => {
   const colors = {
-    blue: 'text-blue-500 bg-blue-500/10',
-    purple: 'text-purple-500 bg-purple-500/10',
-    green: 'text-green-500 bg-green-500/10',
-    red: 'text-red-500 bg-red-500/10',
-    orange: 'text-orange-500 bg-orange-500/10'
+    blue: 'text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300',
+    purple: 'text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-300',
+    green: 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-300',
+    red: 'text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-300',
+    orange: 'text-orange-600 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-300'
   }
-  return colors[props.card.tagColor] || 'text-gray-500 bg-gray-500/10'
+  return colors[props.card.tagColor] || 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300'
 })
 </script>
 
 <template>
-  <div class="flex flex-col rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.07)] bg-surface-light dark:bg-background-dark border border-transparent dark:border-border-dark cursor-pointer hover:shadow-md transition-shadow" :class="{ 'opacity-70': card.completed }">
+  <div 
+    @click="$emit('click', card)"
+    class="group relative flex flex-col rounded-lg border shadow-sm transition-all cursor-pointer hover:shadow-md"
+    :class="[
+      card.isCompleted 
+        ? 'bg-green-50/60 dark:bg-green-900/10 border-green-200 dark:border-green-800/50 border-l-[4px] border-l-green-500' 
+        : 'bg-white dark:bg-[#1E293B] border-slate-200 dark:border-slate-700 hover:border-primary/50 border-l-[4px] border-l-transparent'
+    ]"
+  >
     
-    <!-- Cover Image -->
-    <div v-if="card.coverImage" class="aspect-video w-full rounded-t-lg bg-cover bg-center" :style="{ backgroundImage: `url('${card.coverImage}')` }"></div>
+    <div v-if="card.coverImage" class="aspect-video w-full rounded-t-[4px] bg-cover bg-center" :style="{ backgroundImage: `url('${card.coverImage}')` }"></div>
     
-    <div class="flex w-full flex-col gap-2 p-4">
-      <!-- Tag -->
-      <span v-if="card.tag" class="text-xs font-medium rounded-full px-2 py-0.5 w-fit" :class="tagColorClass">
-        {{ card.tag }}
-      </span>
+    <div class="flex w-full flex-col gap-2 p-3">
+      
+      <div v-if="card.tag" class="flex items-center mb-0.5">
+        <span class="text-[10px] font-bold uppercase tracking-wider rounded px-1.5 py-0.5" :class="tagColorClass">
+          {{ card.tag }}
+        </span>
+      </div>
 
-      <!-- Title -->
-      <p class="text-base font-bold text-text-light-primary dark:text-text-dark-primary" :class="{ 'line-through': card.completed }">
-        {{ card.title }}
-      </p>
+      <div class="flex items-start justify-between gap-3">
+        <p 
+          class="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug transition-colors flex-1 break-words"
+          :class="{ 'text-slate-500 dark:text-slate-500 line-through': card.isCompleted }"
+        >
+          {{ card.title }}
+        </p>
 
-      <!-- Description -->
-      <p v-if="card.description" class="text-sm text-text-light-secondary dark:text-text-dark-secondary line-clamp-2">
+        <span v-if="card.isCompleted" class="material-symbols-outlined text-green-600 dark:text-green-400 text-[20px] shrink-0 mt-[2px]">
+          check_circle
+        </span>
+      </div>
+
+      <p v-if="card.description" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
         {{ card.description }}
       </p>
 
-      <!-- Footer -->
-      <div class="mt-2 flex items-center justify-between">
-        <!-- Date / Status -->
-        <div class="flex items-center gap-2 text-sm" :class="[
-          card.isUrgent ? 'text-red-500' : 
-          card.completed ? 'text-green-600 dark:text-green-500' : 
-          'text-text-light-secondary dark:text-text-dark-secondary'
-        ]">
-          <span class="material-symbols-outlined text-lg">
-            {{ card.completed ? 'task_alt' : 'calendar_today' }}
-          </span>
-          <span>{{ card.date }}</span>
+      <div class="mt-2 flex items-center justify-between min-h-[20px]">
+        <div class="flex items-center gap-2">
+          <template v-if="formattedDate">
+             <div 
+                class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium" 
+                :class="[
+                  card.isCompleted 
+                    ? 'text-green-700 bg-green-100/50 dark:text-green-300 dark:bg-green-900/30' 
+                    : (isExpired ? 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30' : 'text-slate-500 bg-slate-100 dark:text-slate-400 dark:bg-slate-800')
+                ]"
+             >
+               <span class="material-symbols-outlined text-[14px]">
+                 {{ card.isCompleted ? 'event_available' : (isExpired ? 'warning' : 'schedule') }}
+               </span>
+               <span>{{ formattedDate }}</span>
+             </div>
+          </template>
         </div>
 
-        <!-- Avatars -->
         <div class="flex -space-x-2" v-if="card.avatars && card.avatars.length">
           <div 
             v-for="(avatar, index) in card.avatars" 
             :key="index"
-            class="size-6 rounded-full bg-cover ring-2 ring-surface-light dark:ring-surface-dark" 
+            class="size-5 rounded-full bg-cover ring-2 ring-white dark:ring-slate-800" 
             :style="{ backgroundImage: `url('${avatar}')` }"
           ></div>
         </div>

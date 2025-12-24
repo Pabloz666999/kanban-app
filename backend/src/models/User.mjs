@@ -50,8 +50,8 @@ export default (sequelize) => {
     }
   })
 
-   User.prototype.comparePassword = async function (plainPassword) {
-    return await bcrypt.compare(plainPassword, this.password)
+  User.prototype.comparePassword = async function (password) {
+    return bcrypt.compare(password, this.password)
   }
 
   User.associate = (models) => {

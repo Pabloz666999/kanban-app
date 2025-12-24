@@ -15,24 +15,21 @@ const loading = ref(false)
 const error = ref('')
 const showPassword = ref(false)
 
-
 const handleSubmit = async () => {
   error.value = ''
   loading.value = true
 
   try {
-  
     const result = await login(formData.value)
+    // console.log(result.success)
 
-    
-    if (result.success && result.data.data?.token) {
-      router.push('/') 
+    if (result.success) {
+      router.push('/boards')
     } else {
-      error.value = 'Email atau password salah'
+      error.value = result.error
     }
   } catch (err) {
-    
-    error.value = err.response?.data?.message || 'Gagal login, periksa koneksi Anda.'
+    error.value = 'Terjadi kesalahan. Silakan coba lagi.'
   } finally {
     loading.value = false
   }
@@ -43,7 +40,7 @@ const handleSubmit = async () => {
   <div class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root font-display">
     <div class="flex flex-1">
       <div class="flex w-full flex-col lg:flex-row">
-      
+        <!-- Left Column -->
         <div class="relative hidden w-full flex-col items-center justify-center bg-[#197fe6]/10 p-8 dark:bg-background-dark lg:flex lg:w-1/2">
           <div class="absolute inset-0">
             <img
@@ -55,7 +52,7 @@ const handleSubmit = async () => {
           </div>
           <div class="relative z-10 flex max-w-md flex-col items-start text-white">
             <div class="mb-6 flex items-center gap-4">
-              <span class="material-symbols-outlined text-4xl text-white">dashboard</span>
+              <span class="material-symbols-outlined text-4xl text-white">view_kanban</span>
               <span class="text-3xl font-bold">Kanban App</span>
             </div>
             <h2 class="text-4xl font-bold leading-tight mb-4">
@@ -119,11 +116,7 @@ const handleSubmit = async () => {
                 </div>
               </label>
 
-              <div class="w-full text-right mt-2">
-                <a href="#" class="text-primary hover:underline text-sm font-normal leading-normal cursor-pointer">
-                  Lupa Kata Sandi?
-                </a>
-              </div>
+              <!-- <div class -->
 
               <div class="flex w-full py-3 justify-center mt-4">
                 <button

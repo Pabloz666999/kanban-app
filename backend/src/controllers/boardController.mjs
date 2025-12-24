@@ -1,4 +1,5 @@
-import { Board, List, Card } from "../models/index.mjs"
+import { Board, List, Card, User } from "../models/index.mjs"
+import { Op } from "sequelize"
 import { successResponse, errorResponse, HTTP_STATUS } from "../utils/response.mjs"
 
 const getAllBoards = async (req, res) => {
@@ -9,6 +10,29 @@ const getAllBoards = async (req, res) => {
     })
 
     return successResponse(res, boards, "Boards retrieved successfully")
+  } catch (error) {
+    return errorResponse(res, error.message, HTTP_STATUS.INTERNAL_SERVER_ERROR)
+  }
+}
+
+const getPublicBoards = async (req, res) => {
+  try {
+    const boards = await Board.findAll({
+      where: {
+        isPrivate: false,
+        ownerId: { [Op.ne]: req.user.id }
+      },
+      include: [
+        {
+          model: User,
+          as: "owner",
+          attributes: ["id", "name", "email"]
+        }
+      ],
+      order: [["createdAt", "DESC"]]
+    })
+
+    return successResponse(res, boards, "Public boards retrieved successfully")
   } catch (error) {
     return errorResponse(res, error.message, HTTP_STATUS.INTERNAL_SERVER_ERROR)
   }
@@ -32,7 +56,10 @@ const getBoardById = async (req, res) => {
     const board = await Board.findOne({
       where: {
         id: req.params.id,
-        ownerId: req.user.id
+        [Op.or]: [
+          { ownerId: req.user.id },
+          { isPrivate: false }
+        ]
       },
       include: [
         {
@@ -51,7 +78,7 @@ const getBoardById = async (req, res) => {
     })
 
     if (!board) {
-      return errorResponse(res, "Board not found", HTTP_STATUS.NOT_FOUND)
+      return errorResponse(res, "Board not found or private", HTTP_STATUS.NOT_FOUND)
     }
 
     return successResponse(res, board, "Board retrieved successfully")
@@ -99,4 +126,4 @@ const deleteBoard = async (req, res) => {
   }
 }
 
-export { getAllBoards, createBoard, getBoardById, updateBoard, deleteBoard }
+export { getAllBoards, getPublicBoards, createBoard, getBoardById, updateBoard, deleteBoard }

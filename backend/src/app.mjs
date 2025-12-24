@@ -1,16 +1,18 @@
 import express from "express"
 import dotenv from "dotenv"
+import cors from "cors"
+import morgan from "morgan"
 import { sequelize } from "./models/index.mjs"
 import router from "./routes/index.mjs"
-import { logger } from "./middleware/logger.mjs"
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
+app.use(cors())
+app.use(morgan("dev"))
 app.use(express.json())
-app.use(logger)
 
 app.use(router)
 
@@ -30,7 +32,6 @@ const startServer = async () => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
   } catch (error) {
     console.error("Unable to start server:", error.message)
-    console.error(error)
   }
 }
 
