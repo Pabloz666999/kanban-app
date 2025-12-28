@@ -40,7 +40,7 @@ const tagColorClass = computed(() => {
     :class="[
       card.isCompleted 
         ? 'bg-green-50/60 dark:bg-green-900/10 border-green-200 dark:border-green-800/50 border-l-[4px] border-l-green-500' 
-        : 'bg-white dark:bg-[#1E293B] border-slate-200 dark:border-slate-700 hover:border-primary/50 border-l-[4px] border-l-transparent'
+        : 'bg-slate-50 dark:bg-[#1E293B] border-slate-200 dark:border-slate-700 hover:border-primary/50 border-l-[4px] border-l-transparent'
     ]"
   >
     

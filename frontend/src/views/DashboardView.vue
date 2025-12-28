@@ -73,7 +73,7 @@ const handleBoardClick = (boardId) => {
 const openBoardModal = (board = null) => {
   selectedBoard.value = board
   showBoardModal.value = true
-  activeMenuBoardId.value = null 
+  activeMenuBoardId.value = null
 }
 
 const handleBoardSubmit = async (payload) => {
@@ -94,7 +94,7 @@ const handleBoardSubmit = async (payload) => {
 }
 
 const toggleBoardMenu = (boardId, event) => {
-  event.stopPropagation() 
+  event.stopPropagation()
   if (activeMenuBoardId.value === boardId) {
     activeMenuBoardId.value = null
   } else {
@@ -170,14 +170,6 @@ const closeMenu = () => {
             <span class="material-symbols-outlined text-primary">person</span>
             Papan Saya
           </h2>
-
-          <button
-            @click="openBoardModal()"
-            class="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary hover:bg-blue-600 text-white text-sm font-semibold transition-all active:scale-95"
-          >
-            <span class="material-symbols-outlined text-base">add</span>
-            Buat Papan Baru
-          </button>
         </div>
 
 
