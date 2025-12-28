@@ -1,9 +1,20 @@
 import fs from 'fs'
 import path from 'path'
+import mysql from 'mysql2/promise'
 import { sequelize } from '../models/index.mjs'
 
 const runMigrations = async () => {
   try {
+    // Create database if it doesn't exist
+    const connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD
+    })
+
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\``)
+    await connection.end()
+
     const migrationFiles = [
       '001-create-users.sql',
       '002-create-boards.sql', 
