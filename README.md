@@ -2,7 +2,7 @@
 
 Aplikasi manajemen proyek kolaboratif yang mengadopsi metodologi Kanban, dirancang dengan arsitektur Full Stack modern yang memisahkan logika antarmuka pengguna (Frontend) dan pemrosesan data (Backend). Aplikasi ini dibangun menggunakan Vue.js 3 untuk sisi klien dan Express.js untuk sisi server, menawarkan pengalaman pengguna yang responsif dan skalabilitas sistem yang baik.
 
-![Kanban App Dashboard](screenshots/dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 
 ## Fitur Utama
 

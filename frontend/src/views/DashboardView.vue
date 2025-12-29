@@ -84,8 +84,6 @@ const handleBoardSubmit = async (payload) => {
     } else {
       // Create
       const newBoard = await createBoard(payload.title, payload.description, payload.isPrivate)
-      // Optional: Redirect to new board immediately? Or stay on dashboard.
-      // Staying on dashboard to see the new board is fine.
     }
     showBoardModal.value = false
   } catch (error) {
@@ -255,10 +253,10 @@ const closeMenu = () => {
             @click="handleBoardClick(board.id)"
             class="group relative flex flex-col bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/30 hover:border-orange-400/50 transition-all cursor-pointer min-h-[220px]"
           >
-            <div class="h-3 w-full" :style="{ backgroundColor: board.backgroundColor || '#197fe6' }"></div>
+            <div class="h-3 w-full" :style="{ backgroundColor: '#FF7518' }"></div>
             <div class="p-5 flex flex-col flex-1">
               <div class="flex justify-between items-start mb-2">
-                <h3 class="text-slate-900 dark:text-white text-lg font-bold group-hover:text-primary transition-colors line-clamp-1">{{ board.title }}</h3>
+                <h3 class="text-slate-900 dark:text-white text-lg font-bold group-hover:text-[#FF7518] transition-colors line-clamp-1">{{ board.title }}</h3>
               </div>
               <p class="text-slate-500 dark:text-slate-400 text-sm mb-6 line-clamp-3 leading-relaxed">{{ board.description || 'Tidak ada deskripsi.' }}</p>
               <div class="mt-auto flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 pt-4">

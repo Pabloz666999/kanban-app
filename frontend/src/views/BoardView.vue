@@ -164,7 +164,7 @@ const openCreateCardModal = (listId) => {
 
 <template>
   <div class="flex h-screen w-full flex-col bg-background-light dark:bg-background-dark text-text-light-primary dark:text-text-dark-primary font-display">
-    <header class="flex shrink-0 items-center justify-between border-b border-solid border-border-light dark:border-border-dark px-6 py-3 bg-surface-light dark:bg-surface-dark">
+    <header class="h-16 flex items-center justify-between border-b border-solid border-border-light dark:border-border-dark px-6 bg-surface-light dark:bg-surface-dark">
       <div class="flex items-center gap-4">
         <button @click="goHome" class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-500" title="Kembali ke Dashboard">
           <span class="material-symbols-outlined">arrow_back</span>
