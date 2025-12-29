@@ -58,89 +58,95 @@ const handleSubmit = () => {
 </script>
 
 <template>
+  <!-- wrapper modal, nutup seluruh layar -->
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <!-- Backdrop -->
-    <div @click="$emit('close')" class="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"></div>
     
-    <!-- Modal -->
-    <div class="relative w-full max-w-[480px] bg-surface-light dark:bg-surface-dark rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-      <!-- Modal Header -->
+    <!-- backdrop gelap, klik buat nutup modal -->
+    <div 
+      @click="$emit('close')" 
+      class="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm"
+    ></div>
+    
+    <!-- box modal utama -->
+    <div class="relative w-full max-w-[480px] bg-surface-light dark:bg-surface-dark rounded-xl shadow-2xl flex flex-col overflow-hidden">
+      
+      <!-- header modal: judul + tombol close -->
       <div class="flex items-center justify-between px-6 pt-6 pb-2">
-        <h2 class="text-[#0e141b] dark:text-white text-xl font-bold leading-tight tracking-tight">
+        <h2 class="text-xl font-bold">
           {{ isEdit ? 'Edit Board' : 'Buat Board Baru' }}
         </h2>
-        <button @click="$emit('close')" class="group p-2 -mr-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 text-xl font-medium">close</span>
+        <button @click="$emit('close')">
+          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
-      <!-- Modal Content -->
+      <!-- isi modal -->
       <div class="px-6 py-2 flex flex-col gap-5">
-        <!-- Input: Nama Board -->
+        
+        <!-- input nama board -->
         <div class="flex flex-col gap-2">
-          <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal" for="board-title">
-            Nama Board <span class="text-red-500">*</span>
-          </label>
+          <label>Nama Board *</label>
           <input 
             v-model="title"
-            autofocus 
-            class="form-input flex w-full rounded-lg border border-[#d0dbe7] dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-[#0e141b] dark:text-white placeholder:text-[#4e7397] dark:placeholder:text-slate-500 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" 
-            id="board-title" 
-            placeholder="Misal: Project Alpha" 
+            placeholder="Misal: Project Alpha"
             type="text"
             @keyup.enter="handleSubmit"
           />
         </div>
 
-        <!-- Input: Deskripsi -->
+        <!-- input deskripsi board -->
         <div class="flex flex-col gap-2">
-          <label class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal" for="board-desc">
-            Deskripsi <span class="text-slate-400 font-normal text-xs">(Opsional)</span>
+          <label>
+            Deskripsi 
+            <span class="text-xs">(opsional)</span>
           </label>
           <textarea 
             v-model="description"
-            class="form-textarea flex w-full min-h-[100px] resize-none rounded-lg border border-[#d0dbe7] dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-[#0e141b] dark:text-white placeholder:text-[#4e7397] dark:placeholder:text-slate-500 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" 
-            id="board-desc" 
             placeholder="Deskripsikan tujuan board ini..."
           ></textarea>
         </div>
 
-        <!-- Input: Visibility -->
+        <!-- pengaturan visibilitas board  -->
         <div class="flex flex-col gap-2">
-          <span class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal">Visibilitas</span>
-          <label class="flex items-center gap-3 p-3 rounded-lg border border-[#d0dbe7] dark:border-slate-600 bg-slate-50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-            <div class="relative flex items-center">
-              <input type="checkbox" v-model="isPrivate" class="peer sr-only">
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 dark:peer-focus:ring-primary/50 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </div>
+          <span>Visibilitas</span>
+
+          <!-- toggle publik / privat -->
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" v-model="isPrivate" class="sr-only">
+
+            <!-- switch -->
+            <div class="w-11 h-6 rounded-full"></div>
+
+            <!-- keterangan status -->
             <div class="flex flex-col">
-              <span class="text-sm font-semibold text-slate-900 dark:text-white">
+              <span class="text-sm font-semibold">
                 {{ isPrivate ? 'Privat' : 'Publik' }}
               </span>
-              <span class="text-xs text-slate-500 dark:text-slate-400">
-                {{ isPrivate ? 'Hanya Anda yang dapat melihat board ini.' : 'Semua orang dapat melihat board ini.' }}
+              <span class="text-xs">
+                {{ isPrivate 
+                  ? 'Hanya saya yang bisa lihat.' 
+                  : 'Semua orang bisa lihat.' 
+                }}
               </span>
             </div>
           </label>
         </div>
       </div>
 
-      <!-- Modal Footer -->
-      <div class="px-6 py-6 mt-2 flex justify-end items-center gap-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-700/50">
-        <button 
-          @click="$emit('close')"
-          class="px-5 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700"
-        >
+      <!-- footer modal: tombol aksi -->
+      <div class="px-6 py-6 mt-2 flex justify-end gap-3 border-t">
+        <button @click="$emit('close')">
           Batal
         </button>
+
         <button 
           @click="handleSubmit"
           :disabled="loading || !title.trim()"
-          class="px-6 py-2.5 rounded-lg bg-primary hover:bg-blue-600 text-white text-sm font-semibold shadow-md shadow-blue-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-1 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ loading ? 'Memproses...' : (isEdit ? 'Simpan Perubahan' : 'Buat Board') }}
+          {{ isEdit ? 'Simpan Perubahan' : 'Buat Board' }}
         </button>
       </div>
     </div>
   </div>
 </template>
+

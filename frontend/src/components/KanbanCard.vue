@@ -20,17 +20,6 @@ const isExpired = computed(() => {
   if (!props.card.dueDate || props.card.isCompleted) return false
   return new Date(props.card.dueDate) < new Date()
 })
-
-const tagColorClass = computed(() => {
-  const colors = {
-    blue: 'text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-300',
-    purple: 'text-purple-600 bg-purple-50 dark:bg-purple-900/30 dark:text-purple-300',
-    green: 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-300',
-    red: 'text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-300',
-    orange: 'text-orange-600 bg-orange-50 dark:bg-orange-900/30 dark:text-orange-300'
-  }
-  return colors[props.card.tagColor] || 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300'
-})
 </script>
 
 <template>
